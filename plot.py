@@ -2,17 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sys import exit
 
-plt.subplot(1,2,1)
-presX = np.loadtxt("pressureX.dat")
-plt.imshow(presX,interpolation="none")
-plt.colorbar()
-
-plt.subplot(1,2,2)
-presY = np.loadtxt("pressureY.dat")
-plt.imshow(presY,interpolation="none")
-plt.colorbar()
-
-plt.show()
 
 
 rho = np.loadtxt("rho.dat")

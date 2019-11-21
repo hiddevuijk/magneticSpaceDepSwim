@@ -6,8 +6,7 @@
 #include "ConfigFile.h"
 
 #include "xyz.h"
-#include "bfield.h"
-#include "walls.h"
+#include "vfield.h"
 
 #include <iostream>
 #include <vector>
@@ -43,6 +42,7 @@ public:
 	unsigned int N;
 	double L;
 	double m;
+    double B;
 	double v0;
 	double Dr;
 	double dt;
@@ -58,13 +58,9 @@ public:
 	std::vector<XYZ> p;
 	
 	// magnetic field	
-	Bfield bfield;
+	Vfield vfield;
 
-	// walls 
-	Wall wall;
 
-	// force on particle i due to the walls
-	std::vector<XYZ> Fwall;
 
 	// initialize with random coordinates.
 	void init_random();
@@ -80,7 +76,7 @@ public:
 	void write(const char* outname);
 	
 	// temporary containers
-	double Bri;
+	double Vri;
 	XYZ xi,eta,dp,dv;	
 
 
@@ -91,25 +87,19 @@ void System::step()
 
 	for(unsigned int i=0;i<N;++i) {
 		
-		Bri = bfield.get_field(r[i]);
+		Vri = v0*vfield.get_field(r[i]);
 		
 		r[i] += v[i]*dt;
 
 		system_func::xyz_random_normal(xi,rndist);
 		xi *= sqrt_2dt;
 
-		dv.x = ( Bri*v[i].y*dt - v[i].x*dt + 
-				Fwall[i].x*dt + v0*p[i].x*dt + xi.x)/m;	
-		dv.y = (-Bri*v[i].x*dt - v[i].y*dt + 
-				Fwall[i].y*dt + v0*p[i].y*dt + xi.y)/m;	
-		dv.z = (-v[i].z*dt + Fwall[i].z*dt +
-				v0*p[i].z*dt + xi.z)/m;
+		dv.x = ( B*v[i].y*dt - v[i].x*dt + Vri*p[i].x*dt + xi.x)/m;	
+		dv.y = (-B*v[i].x*dt - v[i].y*dt + Vri*p[i].y*dt + xi.y)/m;	
+		dv.z = (-v[i].z*dt + Vri*p[i].z*dt + xi.z)/m;
 
 		v[i] += dv;
 	
-		Fwall[i] = wall.wallForce(r[i]);
-
-
 		if( v0 > 0) {
 			
 			system_func::xyz_random_normal(eta,rndist);
@@ -132,14 +122,9 @@ System::System(ConfigFile config)
 	ndist(0.,1.),udist(0,1),
 	seed(config.read<unsigned int>("seed")),
 	rng(seed), rndist(rng,ndist), rudist(rng,udist),
-	bfield(config.read<double>("B"),
-				config.read<double>("w"),
-				config.read<double>("L"),
-				config.read<std::string>("BType") ),	
-	wall(config.read<double>("sigmaW"),
-		config.read<double>("epsilonW"),
-		config.read<double>("L"),
-		config.read<string>("WallType"))
+	vfield( config.read<double>("w"),
+			config.read<double>("L"),
+			config.read<std::string>("VType") )
 {
 	XYZ rr;
 
@@ -147,6 +132,7 @@ System::System(ConfigFile config)
 	N = config.read<unsigned int>("N");
 	L = config.read<double>("L");
 	m = config.read<double>("m");
+    B = config.read<double>("B");
 	v0 = config.read<double>("v0");
 	Dr = config.read<double>("Dr");
 	dt = config.read<double>("dt");
@@ -161,51 +147,23 @@ System::System(ConfigFile config)
 	p = std::vector<XYZ>(N);
 
 
-	// wall force object
-	Fwall = std::vector<XYZ>(N,XYZ(0,0,0));
 }
 
 void System::init_random()
 {
-	double l = wall.get_sigma()*pow(2.,1./6.);
-	XYZ zeta;
-	double d;
 
-	// node_pd: nodes per dim
-	int node_pd = ceil(pow(1.*N,1./3));
-	int Nnodes = node_pd*node_pd*node_pd;
-	double node_dist = 0;
-
-	if( wall.get_sigma() > 0.0001) {
-		node_dist = (L-2*l)/(node_pd-1);
-	} else {
-		node_dist = (L-2*l)/node_pd;
-	}
-
-	std::vector<XYZ> nodes(Nnodes);
-	int i=0;
-	for(int xi =0;xi<node_pd;++xi) {
-		for(int yi=0;yi<node_pd;++yi) {
-			for(int zi=0;zi<node_pd;++zi) {
-				nodes[i].x = l+xi*node_dist;
-				nodes[i].y = l+yi*node_dist;
-				nodes[i].z = l+zi*node_dist;
-				++i;
-			}
-		}
-	}
 	for(unsigned int i=0;i<N; ++i) {
-		// pick a random node
-		int ni =  (int)( rudist()*nodes.size() );			
-		r[i] = nodes[ni];
-		nodes.erase(nodes.begin()+ni); // remove node
-
+        r[i].x = rudist()*L;
+        r[i].y = rudist()*L;
+        r[i].z = rudist()*L;
 
 		// check!!!!!!	
 		v[i].x = (rudist()-1.)/std::sqrt(m);
 		v[i].y = (rudist()-1.)/std::sqrt(m);
 		v[i].z = (rudist()-1.)/std::sqrt(m);
 
+        double d;
+        XYZ zeta;
 		do {
 			zeta.x = 2*rudist() - 1.;
 			zeta.y = 2*rudist() - 1.;
