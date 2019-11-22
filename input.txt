@@ -8,7 +8,7 @@ B = 1.
 
 #swim force parameters
 v0 = 10.
-VType = sine
+VType = sine_shift
 w = 0.6283185307179586
 
 

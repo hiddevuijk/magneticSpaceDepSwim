@@ -33,6 +33,16 @@ public:
 
 };
 
+class VSine2: public VfieldAll {
+public:
+	VSine2() {L = 0; }
+	VSine2(double ww) { w=ww; }
+
+	double f(const XYZ& r) {
+			return 1+std::sin(w*r.x); }
+
+};
+
 
 class Vfield {
 public:
@@ -47,6 +57,7 @@ public:
 private:
 	VNone vnone;
 	VSine vsine;
+	VSine2 vsine2;
 	
 	VfieldAll *vfield_ptr;
 };
@@ -55,7 +66,7 @@ private:
 
 Vfield::Vfield()
 :
-	vnone(), vsine()
+	vnone(), vsine(), vsine2()
 {
 	vfield_ptr = &vnone;
 }
@@ -64,12 +75,14 @@ Vfield::Vfield()
 Vfield::Vfield(double w, double L,
 			std::string VType)
 :
-	vnone(), vsine(w)
+	vnone(), vsine(w), vsine2(w)
 {
 	if( VType == "none") {
 		vfield_ptr = &vnone;	
 	} else if( VType == "sine" ) {
 		vfield_ptr = &vsine;
+	} else if( VType == "sine_shift" ) {
+		vfield_ptr = &vsine2;
 	} else {
 		std::cerr << "ERROR: " << VType
 			<< " is not a valid option.\n";
