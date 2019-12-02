@@ -86,7 +86,7 @@ void System::step()
 {
 
 	for(unsigned int i=0;i<N;++i) {
-		
+	    r[i].pbc(L);	
 		Vri = v0*vfield.get_field(r[i]);
 		
 		r[i] += v[i]*dt;

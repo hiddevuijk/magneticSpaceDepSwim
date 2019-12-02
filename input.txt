@@ -8,8 +8,9 @@ B = 1.
 
 #swim force parameters
 v0 = 10.
-VType = sine_shift
-w = 0.6283185307179586
+VType = step
+w = 1.5
+#w = 0.6283185307179586
 
 
 #integration parameter

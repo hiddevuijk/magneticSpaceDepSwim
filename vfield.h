@@ -43,6 +43,31 @@ public:
 
 };
 
+class VGauss: public VfieldAll {
+public:
+	VGauss() {L = 0; }
+	VGauss(double ww, double LL) {L = LL; w=ww; }
+
+	double f(const XYZ& r)
+    {
+		return std::exp(-w*(r.x-0.5*L)*(r.x-0.5*L) ) - std::exp(-w*L*L/4);
+    }
+
+};
+
+
+class VStep: public VfieldAll {
+public:
+	VStep() {L = 0; }
+	VStep(double ww, double LL) {L = LL; w=ww; }
+
+	double f(const XYZ& r)
+    {
+		return 0.5*(std::tanh( w*( r.x - 0.25*L ) )*std::tanh( w*(0.75*L - r.x ) ) - std::tanh( -0.25*w*L)*std::tanh(0.75*w*L) );
+    }
+
+};
+
 
 class Vfield {
 public:
@@ -58,6 +83,8 @@ private:
 	VNone vnone;
 	VSine vsine;
 	VSine2 vsine2;
+    VGauss vgauss;
+    VStep vstep;
 	
 	VfieldAll *vfield_ptr;
 };
@@ -65,8 +92,7 @@ private:
 
 
 Vfield::Vfield()
-:
-	vnone(), vsine(), vsine2()
+: vnone(), vsine(), vsine2(), vgauss(), vstep()
 {
 	vfield_ptr = &vnone;
 }
@@ -75,7 +101,7 @@ Vfield::Vfield()
 Vfield::Vfield(double w, double L,
 			std::string VType)
 :
-	vnone(), vsine(w), vsine2(w)
+	vnone(), vsine(w), vsine2(w), vgauss(w,L), vstep(w,L)
 {
 	if( VType == "none") {
 		vfield_ptr = &vnone;	
@@ -83,6 +109,10 @@ Vfield::Vfield(double w, double L,
 		vfield_ptr = &vsine;
 	} else if( VType == "sine_shift" ) {
 		vfield_ptr = &vsine2;
+	} else if( VType == "gauss" ) {
+		vfield_ptr = &vgauss;
+	} else if( VType == "step" ) {
+		vfield_ptr = &vstep;
 	} else {
 		std::cerr << "ERROR: " << VType
 			<< " is not a valid option.\n";
