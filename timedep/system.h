@@ -12,6 +12,7 @@
 #include <vector>
 #include <boost/random.hpp>
 
+
 namespace system_func {
 template<class RNDIST> 
 inline void xyz_random_normal(XYZ &r, RNDIST &rndist) {
@@ -68,6 +69,8 @@ public:
 	// increment time
 	void step();
 
+    double t_tau() const { return t*vfield.get_tau(); }
+
 	bool check_x_in_box();
 	bool check_y_in_box();
 	bool check_z_in_box();
@@ -86,8 +89,7 @@ void System::step()
 
 	for(unsigned int i=0;i<N;++i) {
 	    r[i].pbc(L);	
-		Vri = v0*vfield.get_field(r[i]);
-		
+		Vri = v0*vfield.get_field(r[i], t);
 		r[i] += v[i]*dt;
 
 		system_func::xyz_random_normal(xi,rndist);
@@ -109,6 +111,7 @@ void System::step()
 			p[i] += dp;
 			p[i].normalize();
 		}
+
 	}
 
 	t += dt;
@@ -123,6 +126,7 @@ System::System(ConfigFile config)
 	rng(seed), rndist(rng,ndist), rudist(rng,udist),
 	vfield( config.read<double>("w"),
 			config.read<double>("L"),
+            config.read<double>("tau"),
 			config.read<std::string>("VType") )
 {
 	XYZ rr;

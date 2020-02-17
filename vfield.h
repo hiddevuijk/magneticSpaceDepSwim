@@ -13,6 +13,7 @@ public:
 protected:
 	double w;
 	double L;
+
 };
 
 class VNone: public VfieldAll {

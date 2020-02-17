@@ -1,0 +1,24 @@
+#system parameters
+N = 100
+L = 10.
+m = 0.002
+Dr = 20.
+seed = 213436111
+B = 1.
+
+#swim force parameters
+v0 = 10.
+VType = sine_shift
+w = 1.5
+tau = 0.1
+#w = 0.6283185307179586
+
+
+#integration parameter
+Nt_init = 1000
+Nt = 10000
+sample_freq = 1
+print_freq = 1000
+t_unit = 10
+dt = 0.0005
+bs = .5
